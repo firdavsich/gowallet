@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/firdavsich/gowallet/cmd/server"
+	"github.com/firdavsich/gowallet/cmd/api"
 )
 
 func main() {
-	server.Run()
+
+	api.Run()
 }
