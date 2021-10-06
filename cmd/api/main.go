@@ -63,6 +63,16 @@ func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func statsHandler(rw http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
+	id, _ := strconv.Atoi(r.FormValue("id"))
+	if transactions, summ, err := wallet.Stats(dbConn, id); err != nil {
+		fmt.Fprintf(rw, "Error")
+	} else {
+		fmt.Fprintf(rw, "transaction count=%d, summ=%dTJS", transactions, summ)
+	}
+}
+
 func Run() {
 	var err error
 	dbConn, err = sql.Open("postgres", dbConninfo)
@@ -74,6 +84,7 @@ func Run() {
 	http.HandleFunc("/create", createHandler)
 	http.HandleFunc("/topup", topUpHandler)
 	http.HandleFunc("/balance", balanceHandler)
+	http.HandleFunc("/stats", statsHandler)
 
 	log.Printf("API server on %s", port)
 	err = http.ListenAndServe(net.JoinHostPort("", port), nil)
