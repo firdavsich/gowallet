@@ -29,14 +29,28 @@ func checkFunc(rw http.ResponseWriter, r *http.Request) {
 
 	}
 }
+
 func createFunc(rw http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 	if id, err := wallet.Create(dbConn); err != nil {
 		fmt.Fprintf(rw, "Error")
-
 	} else {
 		fmt.Fprintf(rw, strconv.Itoa(id))
 	}
+}
+
+func TopUpFunc(rw http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
+	id, _ := strconv.Atoi(r.FormValue("id"))
+	summ, _ := strconv.Atoi(r.FormValue("summ"))
+
+	if balance, err := wallet.TopUp(dbConn, id, summ); err != nil {
+		log.Println(err)
+		fmt.Fprintf(rw, "error")
+	} else {
+		fmt.Fprintf(rw, strconv.Itoa(balance))
+	}
+
 }
 
 func Run() {
@@ -48,6 +62,7 @@ func Run() {
 
 	http.HandleFunc("/check", checkFunc)
 	http.HandleFunc("/create", createFunc)
+	http.HandleFunc("/topup", TopUpFunc)
 
 	log.Printf("API server on %s", port)
 	err = http.ListenAndServe(net.JoinHostPort("", port), nil)
