@@ -19,7 +19,7 @@ var (
 	dbConn *sql.DB
 )
 
-func checkFunc(rw http.ResponseWriter, r *http.Request) {
+func checkHandler(rw http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 	id, _ := strconv.Atoi(r.FormValue("id"))
 	if wallet.Check(dbConn, id) == true {
@@ -30,7 +30,7 @@ func checkFunc(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createFunc(rw http.ResponseWriter, r *http.Request) {
+func createHandler(rw http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 	if id, err := wallet.Create(dbConn); err != nil {
 		fmt.Fprintf(rw, "Error")
@@ -39,7 +39,7 @@ func createFunc(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TopUpFunc(rw http.ResponseWriter, r *http.Request) {
+func topUpHandler(rw http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 	id, _ := strconv.Atoi(r.FormValue("id"))
 	summ, _ := strconv.Atoi(r.FormValue("summ"))
@@ -53,6 +53,16 @@ func TopUpFunc(rw http.ResponseWriter, r *http.Request) {
 
 }
 
+func balanceHandler(rw http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
+	id, _ := strconv.Atoi(r.FormValue("id"))
+	if balance, err := wallet.Balance(dbConn, id); err != nil {
+		fmt.Fprintf(rw, "Error")
+	} else {
+		fmt.Fprintf(rw, strconv.Itoa(balance))
+	}
+}
+
 func Run() {
 	var err error
 	dbConn, err = sql.Open("postgres", dbConninfo)
@@ -60,9 +70,10 @@ func Run() {
 		log.Panic(err)
 	}
 
-	http.HandleFunc("/check", checkFunc)
-	http.HandleFunc("/create", createFunc)
-	http.HandleFunc("/topup", TopUpFunc)
+	http.HandleFunc("/check", checkHandler)
+	http.HandleFunc("/create", createHandler)
+	http.HandleFunc("/topup", topUpHandler)
+	http.HandleFunc("/balance", balanceHandler)
 
 	log.Printf("API server on %s", port)
 	err = http.ListenAndServe(net.JoinHostPort("", port), nil)
